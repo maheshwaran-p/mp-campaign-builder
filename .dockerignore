@@ -1,0 +1,11 @@
+.git
+.gitignore
+.DS_Store
+README.md
+Dockerfile
+.dockerignore
+package-lock.json
+schema
+test
+.env
+node_modules

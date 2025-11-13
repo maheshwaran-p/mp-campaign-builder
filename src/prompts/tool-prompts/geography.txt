@@ -1,0 +1,172 @@
+TOOL: GEOGRAPHY 
+
+PRE-TOOL-CALL CHECKLIST:
+✓ Location is explicitly specified in user query
+✓ Radius value is a positive number (if radius-based targeting)
+✓ Action matches the targeting type (getCoordinates or getGeoTargeting)
+✓ All required parameters are present
+✓ JSON syntax is valid and complete
+
+Strict Instructions for LLM Tool Calls:
+
+1. Location Parameter Validation:
+   - MUST be a clear, specific place name (city, state, landmark, etc.)
+   - MUST include state/country for disambiguation (e.g., "Orlando, FL" not just "Orlando")
+   - NEVER include directional phrases like "within", "near", "around" in the location
+   - EXTRACT ONLY the place name, removing any distance or directional words
+
+2. Radius Parameter Validation:
+   - MUST be a positive number (no decimals)
+   - MUST be specified in miles
+   - Maximum allowed value: 100 miles
+   - Remove "miles" unit when setting parameter value
+
+3. Tool Identifier Rules:
+   - YOU MUST ALWAYS DEFINE TOOL AS "tool": "geography"
+   - Do NOT use "name": "geography" or omit the property
+   - This is required for backend parsing
+
+4. Action Parameter Rules:
+   - MUST be either "getCoordinates" (for location/radius)
+   - Never use any other values or append extra text/commas
+
+IMPORTANT: For getCoordinates, ALWAYS INCLUDE:
+LOCATION PARAMETER which IS THE NAME OF THE PLACE:
+For example, 
+USER: lets target geo 50 miles within ORLANDO, FL
+Then,
+location: ORLANDO, FL
+radiusMiles: 50
+
+DESCRIPTION:
+{
+  "name": "geography",
+  "description": "Provides geo targeting and location-based options for advertising campaigns.",
+  "parameters": {
+    "action": {
+      "type": "string",
+      "enum": ["getCoordinates"],
+      "description": "The type of geographic targeting to perform"
+    },
+    "location": {
+      "type": "string",
+      "description": "Required for getCoordinates: Clear place name with state/country",
+      "examples": ["Orlando, FL", "Seattle, WA", "Toronto, Canada"]
+    },
+    "radiusMiles": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Required for getCoordinates: Distance in miles"
+    }
+  }
+}
+
+LOCATION EXTRACTION RULES:
+1. Look for place names followed by state/country abbreviations
+   Good: "Orlando, FL", "New York, NY", "Toronto, Canada"
+   Bad: "downtown", "the city", "nearby"
+
+2. Remove distance and directional phrases:
+   Input: "within 50 miles of Orlando, FL"
+   Extract: location = "Orlando, FL", radiusMiles = 50
+
+3. Handle compound locations:
+   Input: "between Miami and Fort Lauderdale"
+   Action: Ask user to choose ONE specific location
+
+4. Missing Information:
+   - If no state/country: Ask for clarification
+   - If no radius: Ask for desired distance
+   - If ambiguous location: List options and ask user to choose
+
+For LOCATION BASED AND MILES BASED lookup:
+{
+  "action": {
+    "tool_call": {
+      "tool": "geography",
+      "parameters": {
+        "action": "getCoordinates",
+        "location": "Orlando, Florida",
+        "radiusMiles": 50
+      }
+    },
+    "type": "tool_call"
+}
+}
+
+
+5. NEVER attempt to extract location or radius from the user query in the backend unless the LLM failed to provide them. The LLM MUST parse and set these parameters directly in the tool call.
+6. If the user prompt is ambiguous, ask a clarifying question before calling the tool.
+7. ALWAYS use valid JSON syntax. All properties must be comma-separated and the response must be parseable by JSON.parse().
+8. After receiving tool results, summarize the output for the user and ask a question to guide the next step.
+---
+
+Good Example:
+User: "Show me locations within 50 miles of Orlando, FL."
+Tool Call:
+{
+  "action": {
+    "tool_call": {
+      "tool": "geography",
+      "parameters": {
+        "action": "getCoordinates",
+        "location": "Orlando, Florida",
+        "radiusMiles": 50
+      }
+    },
+    "type": "tool_call"
+  },
+  "message": "I've extracted the coordinates and fixed the location. Are you okay with the suggested zip codes within this region, or would you like to adjust the radius?",
+  "state": {}
+}
+
+Bad Example:
+{
+  "action": {
+    "tool_call": {
+      "parameters": {
+        "action": "getCoordinates,location:Orlando, FL"
+      }
+    },
+    "type": "tool_call"
+  }
+}
+
+Bad Example:
+{
+  "action": {
+    "tool_call": {
+      "parameters": {
+        "action": "getCoordinates"
+      }
+    },
+    "type": "tool_call"
+  }
+}
+// (Missing tool property, location and radiusMiles)
+
+VERIFICATION CHECKLIST:
+Before making any tool call, verify:
+
+1. Location Parameter (for getCoordinates):
+   □ Place name is specific and unambiguous
+   □ State/country is included
+   □ No directional phrases or distance info
+   □ Matches one of the standard formats
+
+2. Radius Parameter (for getCoordinates):
+   □ Is a positive integer
+   □ Between 1 and 100 miles
+   □ Units removed from value
+
+3. Tool Call Structure:
+   □ "tool": "geography" is present
+   □ Action is either getCoordinates or getGeoTargeting
+   □ All required parameters included
+   □ JSON is valid and properly formatted
+
+4. User Interaction:
+   □ Ambiguities resolved through questions
+   □ Confirmation for unusual locations
+   □ Follow-up suggestions provided
