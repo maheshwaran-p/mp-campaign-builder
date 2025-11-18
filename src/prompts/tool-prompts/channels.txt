@@ -1,0 +1,77 @@
+TOOL: CHANNELS
+
+Description: Suggests Linear TV channels, Streaming TV and digital signage locations for campaigns.
+
+Arguments:
+{
+  "action": {
+    "tool_call": {
+      "tool": "channels",
+      "parameters": {
+        "action": "getAllChannels"
+      }
+    },
+    "type": "tool_call"
+  }
+}
+
+STRICT USAGE:
+- Use only data from the tool result. Do not invent or modify channels/locations.
+- If the tool fails, ask the user to retry. Do not generate suggestions.
+- Use plain text and Markdown (e.g., **bold**, tables with |).
+- No HTML tags.
+- UPDATE STATE with the responses after user confirms
+
+RESPONSE FORMAT:
+**For your [campaign type] campaign targeting [audience], I recommend the following media channels:**
+
+**Recommended Linear TV Channels**
+| Channel Name | Target Audience | Estimated Reach | Selection Rationale |
+|--------------|-----------------|-----------------|---------------------|
+| [Station Name] | [Demographics] | [Reach] | [Rationale] |
+| [Station Name] | [Demographics] | [Reach] | [Rationale] |
+| [Station Name] | [Demographics] | [Reach] | [Rationale] |
+
+**Recommended Streaming TV Platforms**
+| Platform Name | Target Audience | Estimated Reach | Selection Rationale |
+|---------------|-----------------|-----------------|---------------------|
+| [Platform Name] | [Demographics] | [Reach] | [Rationale] |
+| [Platform Name] | [Demographics] | [Reach] | [Rationale] |
+| [Platform Name] | [Demographics] | [Reach] | [Rationale] |
+
+**Recommended Digital Signage Locations**
+| Area | Audience Profile | Foot Traffic | Selection Rationale |
+|------|------------------|--------------|---------------------|
+| [Area Name] | [Demographics] | [Traffic] | [Rationale] |
+| [Area Name] | [Demographics] | [Traffic] | [Rationale] |
+| [Area Name] | [Demographics] | [Traffic] | [Rationale] |
+
+**These channels provide a multi-channel approach combining [strategy]. Would you like to proceed?**
+
+IMPORTANT:
+- No blank lines between headings and tables.
+- Always suggest exactly 3 Linear TV channels, 3 Streaming TV Channels and 3 signage locations.
+
+SELECTION CRITERIA:
+- Analyze %%CURRENT_FORM_STATE%% for demographics, goals, and audience.
+- Match suggestions to the campaign’s target audience.
+- If form state is empty, provide general high-reach suggestions.
+- Justify each selection based on tool data and campaign context.
+
+STATE MANAGEMENT:
+- Add confirmed channels to the "channels" field in the state.
+- Format: { linearTV: ["Station 1"], streamingTV: ["Platform 1"], signageLocations: ["Area 1"] }.
+- Do not update "geo" unless explicitly requested.
+
+EXAMPLES:
+GOOD:
+**Recommended TV Broadcast Channels**
+| Channel Name | Target Audience | Estimated Reach | Selection Rationale |
+|--------------|-----------------|-----------------|---------------------|
+| Nippon TV | All ages | Very High | Broad appeal for general reach. |
+| NHK General | Broad audience | Very High | High trust and wide viewership. |
+| Fuji TV | Youth | High | Trendy shows for dynamic audiences. |
+
+BAD:
+- Providing fewer/more than 3 suggestions.
+- Generic rationale not tied to the campaign.
