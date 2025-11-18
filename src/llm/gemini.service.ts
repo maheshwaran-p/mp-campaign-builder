@@ -26,9 +26,14 @@ export class GeminiService {
 
   async generateResponse(prompt: string): Promise<GeminiResponse> {
     try {
+      const now = new Date();
+      const dateIso = now.toISOString().split('T')[0]; 
+      const dateLocal = now.toLocaleDateString();
+      const finalPrompt = `CurrentServerDate: ${dateIso}\nCurrentServerDateLocal: ${dateLocal}\nInstruction: Interpret any relative-date phrases (e.g. "today", "next week") as relative to CurrentServerDate.\n\n${prompt}`;
+
       const response = await this.geminiClient.models.generateContent({
         model: MODEL,
-        contents: prompt,
+        contents: finalPrompt,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -52,6 +57,15 @@ export class GeminiService {
                   demography: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
                   audience: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
                   geo: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
+                  channels: {
+                    type: Type.OBJECT,
+                    nullable: true,
+                    properties: {
+                      linearTV: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
+                      streamingTV: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
+                      signageLocations: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true }
+                    }
+                  },
                   dayParting: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
                 }
               },
@@ -92,7 +106,6 @@ export class GeminiService {
         /(\d{4}-\d{2}-\d{2})T[\d:.]+Z?\[?[^\]"]*\]?[^"]*(?=")/g,
         '$1'
       );
-      
       
       const parsed: GeminiResponse = JSON.parse(cleanedText);
       console.log('[GeminiService] Structured Gemini output:', parsed);

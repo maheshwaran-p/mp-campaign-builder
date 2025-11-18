@@ -10,6 +10,7 @@ import { diff } from 'json-diff-ts';
 import { DemographicsTool } from 'src/tools/demographics/demographics.tool';
 import { AudienceTool } from 'src/tools/audience/audience.tool';
 import { GeographyTool } from 'src/tools/geography/geography.tool';
+import { ChannelsTool } from 'src/tools/channels/channels.tool';
 import { ToolCallRequest, ToolCallResponse } from 'src/tools/tool.interface';
 import { createToolRegistry } from 'src/tools/tools';
 import { Observable } from 'rxjs';
@@ -35,7 +36,7 @@ export class ChatService {
     changes: Partial<FormState>;
   } {
     const oldState: Partial<FormState> = currentState || {};
-    const newState: Partial<FormState> = this.sanitizeDates(newStateData || {});
+    const newState: Partial<FormState> = newStateData || {};
     // merging both the old and new states!
     const mergedState: Partial<FormState> = { ...oldState, ...newState };
     const changeset = diff(oldState, mergedState);
@@ -53,38 +54,21 @@ export class ChatService {
   }
 
 
-  private sanitizeDates(state: Partial<FormState>): Partial<FormState> {
-    const sanitized = { ...state };
   
-    if (sanitized.startDate && typeof sanitized.startDate === 'string') {
-      const match = sanitized.startDate.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) {
-        sanitized.startDate = match[1];
-      }
-    }
-    
-    if (sanitized.endDate && typeof sanitized.endDate === 'string') {
-      const match = sanitized.endDate.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) {
-        sanitized.endDate = match[1];
-      }
-    }
-    
-    return sanitized;
-  }
 
   constructor(
     promptsService: PromptsService,
     geminiService: GeminiService,
     private readonly demographicsTool: DemographicsTool,
     private readonly audienceTool: AudienceTool,
-    private readonly geographyTool: GeographyTool
+    private readonly geographyTool: GeographyTool,
+    private readonly channelsTool: ChannelsTool
   ) {
     this.chatSessions = new ChatSessions();
     this.promptsService = promptsService;
     this.geminiService = geminiService;
 
-    this.toolRegistry = createToolRegistry(this.demographicsTool, this.audienceTool, this.geographyTool);
+    this.toolRegistry = createToolRegistry(this.demographicsTool, this.audienceTool, this.geographyTool, this.channelsTool);
   }
 
   getOrCreateSession(sessionId: string | undefined, message: string): SessionState {

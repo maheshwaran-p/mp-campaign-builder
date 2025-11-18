@@ -8,7 +8,7 @@ import { UtilsService } from 'src/utils/utils.service';
 import { ChatService } from './chat.service';
 import { PromptsService } from 'src/prompts/prompts.service';
 import { GeminiService } from 'src/llm/gemini.service';
-import { DemographicsTool, DemographicsToolService, AudienceTool, AudienceToolService, GeographyTool, GeographyToolService} from 'src/tools';
+import { DemographicsTool, DemographicsToolService, AudienceTool, AudienceToolService, GeographyTool, GeographyToolService, ChannelsTool, ChannelsToolService } from 'src/tools';
 
 @Module({
   imports: [ConfigModule, HttpModule],
@@ -24,7 +24,9 @@ import { DemographicsTool, DemographicsToolService, AudienceTool, AudienceToolSe
     AudienceTool,
     AudienceToolService,
     GeographyTool,
-    GeographyToolService
+    GeographyToolService,
+    ChannelsTool,
+    ChannelsToolService
   ],
   controllers: [ChatController],
 })

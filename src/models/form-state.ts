@@ -15,5 +15,10 @@ export interface FormState {
   demography?: string[];
   audience?: string[];
   geo?: string[];
+  channels?: {
+    linearTV?: string[];
+    streamingTV?: string[];
+    signageLocations?: string[];
+  };
   dayParting?: string[];
-} 
+}

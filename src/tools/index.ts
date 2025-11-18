@@ -6,3 +6,5 @@ export * from './audience/audience.tool';
 export * from './audience/audience-tool.service';
 export * from './geography/geography.tool';
 export * from './geography/geography-tool.service';
+export * from './channels/channels.tool';
+export * from './channels/channels-tool.service';

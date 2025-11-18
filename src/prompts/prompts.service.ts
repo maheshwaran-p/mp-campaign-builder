@@ -11,6 +11,7 @@ const MACRO_TOOL_REGISTRY = '%%TOOL_REGISTRY%%';
 const MACRO_DEMOGRAPHICS_TOOL_PROMPT = '%%DEMOGRAPHICS_TOOL_PROMPT%%';
 const MACRO_AUDIENCE_TOOL_PROMPT = '%%AUDIENCE_TOOL_PROMPT%%';
 const MACRO_GEOGRAPHY_TOOL_PROMPT = '%%GEOGRAPHY_TOOL_PROMPT%%';
+const MACRO_CHANNELS_TOOL_PROMPT = '%%CHANNELS_TOOL_PROMPT%%';
 
 @Injectable()
 export class PromptsService {
@@ -20,6 +21,7 @@ export class PromptsService {
   private demographicsToolPrompt: string;
   private audienceToolPrompt: string;
   private geographyToolPrompt: string;
+  private channelsToolPrompt: string;
 
   constructor() {
     const promptsDir = __dirname;
@@ -29,6 +31,7 @@ export class PromptsService {
     this.demographicsToolPrompt = fs.readFileSync(path.join(promptsDir, "tool-prompts/demographics.txt"),"utf8");
     this.audienceToolPrompt = fs.readFileSync(path.join(promptsDir, "tool-prompts/audience.txt"),"utf8");
     this.geographyToolPrompt = fs.readFileSync(path.join(promptsDir, "tool-prompts/geography.txt"),"utf8");
+    this.channelsToolPrompt = fs.readFileSync(path.join(promptsDir, "tool-prompts/channels.txt"),"utf8");
   }
 
   getSystemPrompt(): string {
@@ -39,7 +42,8 @@ export class PromptsService {
     let toolRegistryWithPrompts = this.toolRegistryPrompt
       .replace(MACRO_DEMOGRAPHICS_TOOL_PROMPT, this.demographicsToolPrompt)
       .replace(MACRO_AUDIENCE_TOOL_PROMPT, this.audienceToolPrompt)
-      .replace(MACRO_GEOGRAPHY_TOOL_PROMPT, this.geographyToolPrompt);
+      .replace(MACRO_GEOGRAPHY_TOOL_PROMPT, this.geographyToolPrompt)
+      .replace(MACRO_CHANNELS_TOOL_PROMPT, this.channelsToolPrompt);
     
     return this.userPrompt
       .replace(MACRO_TOOL_REGISTRY, toolRegistryWithPrompts)
