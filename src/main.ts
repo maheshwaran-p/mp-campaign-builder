@@ -16,7 +16,7 @@ async function bootstrap() {
   console.log(`Application is running on (test 12 ): http://localhost:${process.env.PORT ?? 4000}`);
   console.log(`SSE Test page: http://localhost:${process.env.PORT ?? 4000}/sse-test.html`);
 
-  console.log('hi');
+  console.log('test');
 }
 bootstrap();
 

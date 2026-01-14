@@ -19,23 +19,13 @@ export class ChatController {
 
   @Post()
   @UseInterceptors(FilesInterceptor('files'))
-  async handleChat(
-    @UploadedFiles() files: Array<Express.Multer.File>,
-    @Body() body: ChatRequestDtoOrig,
-  ) {
-     return await this.chatService.processChat(body, files);
-
+  async handleChat(@Body() body: ChatRequestDto, @UploadedFiles() files: Array<Express.Multer.File>) {
+    return await this.chatService1.processUpload(body, files);
   }
 
   @Post('message')
   async handleMessage(@Body() body: ChatRequestDto) {
     return await this.chatService1.processMessage(body);
-  }
-
-  @Post('upload')
-  @UseInterceptors(FilesInterceptor('files'))
-  async handleUpload(@Body() body: ChatRequestDto, @UploadedFiles() files: Array<Express.Multer.File>) {
-    return await this.chatService1.processUpload(body, files);
   }
 
   /**

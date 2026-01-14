@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { FormState } from 'src/models/form-state';
 import { ChatResponseDto } from './dto/chat-response.dto';
 import { ChatRequestDto } from './dto/chat-request.dto';
@@ -15,6 +15,9 @@ import { ToolCallRequest, ToolCallResponse } from 'src/tools/tool.interface';
 import { createToolRegistry } from 'src/tools/tools';
 import { Observable } from 'rxjs';
 import { SSEEventType } from './sse-events';
+import { CreativeService, SupportedVideoExtensions, VideoMetadata } from 'src/creative/creative.service';
+import { UtilsService } from 'src/utils/utils.service';
+import * as crypto from 'crypto';
 @Injectable()
 export class ChatService {
   private chatSessions: ChatSessions;
@@ -59,6 +62,7 @@ export class ChatService {
   constructor(
     promptsService: PromptsService,
     geminiService: GeminiService,
+    private readonly utilsService:UtilsService,
     private readonly demographicsTool: DemographicsTool,
     private readonly audienceTool: AudienceTool,
     private readonly geographyTool: GeographyTool,
@@ -165,17 +169,88 @@ export class ChatService {
    * @param files - The files from the user
    * @returns The response from the server
    */
-  async processUpload(
-    request: ChatRequestDto,
-    files: Array<Express.Multer.File>,
-  ): Promise<ChatResponseDto> {
+
+  async processUpload(request: ChatRequestDto, files: Express.Multer.File[]) {
+    let extractedText = '';
+    let creatives: string  = '';
+    if (files?.length) {
+      for (const file of files) {
+        const mime = file.mimetype;
+        console.log(mime);
+       
+        if (mime.startsWith('video/')) {
+          const fileExtension =file.originalname.split('.').pop()?.toLowerCase() || '';
+
+          const isSupported = SupportedVideoExtensions.includes(fileExtension);
+          if (!isSupported) {
+            throw new BadRequestException(
+              `Unsupported video format: .${fileExtension}`,
+            );
+          }
+
+          try {
+            const videoId = crypto.randomBytes(16).toString('hex');
+            const filePath = await this.utilsService.saveUploadedFile(
+              file,
+              videoId,
+            );
+
+            const uploaded = await this.utilsService.processVideo(
+              videoId,
+              filePath,
+            );
+            creatives= uploaded.videoUrl;
+            console.log(creatives);
+          
+          } catch (err) {
+            console.error('Video processing failed:', err);
+            throw new BadRequestException('Failed to process uploaded video.');
+          }
+        }
+
+        else {
+          try {
+            const { getTextExtractor } = await import('office-text-extractor');
+            const extractor = getTextExtractor();
+            const text = await extractor.extractText({
+              input: file.buffer,
+              type: 'buffer',
+            });
+            extractedText += `\n${text}`;
+          } catch (error) {
+            Logger.error('Text extraction failed:', error);
+          }
+        }
+      }
+    }
+    if (creatives.length > 0) {
+      const session = this.getOrCreateSession(request.sessionId,'video-uploaded');
+
+      session.state = {
+        ...(session.state || {}),
+        creatives:creatives,
+      };
+
+      return {
+        sessionId: session.id,
+        formState: session.state
+      };
+    }
+    const finalMessage = extractedText.trim();
+
+    if (!finalMessage) {
+      throw new BadRequestException('No valid text could be extracted from file.');
+    }
+
+    const session = this.getOrCreateSession(request.sessionId, finalMessage);
+
     return {
-      sessionId: request?.sessionId,
-      message: `Hello from Upload - ${request.sessionId} - ${files?.length} files`,
-      state: {},
-      changes: {},
+      sessionId: session.id,
+      extractedText: finalMessage,
     };
   }
+
+
 
   /**
    * Stream chat messages using Server-Sent Events

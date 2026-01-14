@@ -10,7 +10,7 @@ export interface FormState {
   endDate?: string;
   advertiser?: string;
   advertiserCategory?: string;
-  creatives?: string[];
+  creatives?: string;
   products?: string[];
   demography?: string[];
   audience?: string[];
